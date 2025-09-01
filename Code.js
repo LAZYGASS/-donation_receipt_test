@@ -195,8 +195,35 @@ function validateRequiredData(rowData) {
   return true;
 }
 
-// 시트를 PDF로 변환
+// 시트를 PDF로 변환 - 대안 방법
 function createPDFFromSheet(sheet) {
+  try {
+    const spreadsheet = sheet.getParent();
+    const sheetId = sheet.getSheetId();
+    
+    // 방법 1: DriveApp 사용 (권한 문제 회피)
+    const tempFile = DriveApp.createFile(
+      spreadsheet.getBlob().setName('temp_sheet.xlsx')
+    );
+    
+    // PDF로 변환
+    const pdfBlob = tempFile.getAs('application/pdf');
+    
+    // 임시 파일 삭제
+    DriveApp.getFileById(tempFile.getId()).setTrashed(true);
+    
+    return pdfBlob;
+    
+  } catch (error) {
+    console.error('DriveApp 방법 실패, UrlFetch 시도:', error);
+    
+    // 방법 2: 기존 UrlFetch 방법
+    return createPDFWithUrlFetch(sheet);
+  }
+}
+
+// UrlFetch를 사용한 PDF 생성 (백업 방법)
+function createPDFWithUrlFetch(sheet) {
   const spreadsheet = sheet.getParent();
   const sheetId = sheet.getSheetId();
   
