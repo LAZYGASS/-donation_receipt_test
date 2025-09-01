@@ -9,8 +9,8 @@ const EMAIL_COLUMN = 5;     // E열
 const PDF_STATUS_COLUMN = 11; // K열
 const MAIL_STATUS_COLUMN = 12; // L열
 
-// 메인 트리거 함수: 체크박스 변경 감지
-function onCheckboxChange(e) {
+// 메인 트리거 함수: 셀 편집 감지
+function onEdit(e) {
   try {
     const sheet = e.source.getActiveSheet();
     const range = e.range;
@@ -215,20 +215,35 @@ function createPDFFromSheet(sheet) {
   return response.getBlob();
 }
 
+// 폼 제출 시 자동 체크박스 생성
+function onFormSubmit(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    
+    // 설문지 응답 시트가 아니면 종료
+    if (sheet.getName() !== RESPONSE_SHEET_NAME) {
+      return;
+    }
+    
+    const row = e.range.getRow();
+    console.log(`새 응답 접수 - 행: ${row}`);
+    
+    // 체크박스 생성
+    const checkboxCell = sheet.getRange(row, CHECKBOX_COLUMN);
+    checkboxCell.insertCheckboxes();
+    checkboxCell.setValue(false); // 기본값: 체크 해제
+    
+    console.log(`체크박스 생성 완료 - 행: ${row}, J열`);
+    
+  } catch (error) {
+    console.error('폼 제출 처리 중 오류:', error);
+  }
+}
+
 // 수동 실행용 함수들
 function setupTriggers() {
-  // 기존 트리거 삭제
-  const triggers = ScriptApp.getProjectTriggers();
-  triggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
-  
-  // 새 트리거 생성
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  ScriptApp.newTrigger('onCheckboxChange')
-    .timeBased()
-    .everyMinutes(1)
-    .create();
-    
-  console.log('트리거 설정 완료');
+  console.log('onEdit, onFormSubmit 함수는 자동으로 감지됩니다.');
+  console.log('기존 응답에 체크박스를 일괄 추가하려면 createCheckboxForNewResponse() 실행');
 }
 
 function testFunction() {
